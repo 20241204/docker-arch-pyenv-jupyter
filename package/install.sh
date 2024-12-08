@@ -50,7 +50,7 @@ export PYENV_VIRTUALENV_DISABLE_PROMPT=1
     
     # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
     # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
-    pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1) versions
+    pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
     
     # 刷新
     pyenv rehash
