@@ -1,7 +1,7 @@
 # docker-arch-pyenv-jupyter
 在 arm64v8 和 amd64 的 alpine 上使用的 pyenv Jupyter docker构建材料。
 
-[![GitHub Workflow dockerbuild Status](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/docker-image.yml/badge.svg)](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/docker-image.yml)![Watchers](https://img.shields.io/github/watchers/20241204/docker-arch-pyenv-jupyter) ![Stars](https://img.shields.io/github/stars/20241204/docker-arch-pyenv-jupyter) ![Forks](https://img.shields.io/github/forks/20241204/docker-arch-pyenv-jupyter) ![Vistors](https://visitor-badge.laobi.icu/badge?page_id=20241204.docker-arch-pyenv-jupyter) ![LICENSE](https://img.shields.io/badge/license-CC%20BY--SA%204.0-green.svg)  
+[![GitHub Workflow dockerbuild Status](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/actions.yml/badge.svg)](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/actions.yml)![Watchers](https://img.shields.io/github/watchers/20241204/docker-arch-pyenv-jupyter) ![Stars](https://img.shields.io/github/stars/20241204/docker-arch-pyenv-jupyter) ![Forks](https://img.shields.io/github/forks/20241204/docker-arch-pyenv-jupyter) ![Vistors](https://visitor-badge.laobi.icu/badge?page_id=20241204.docker-arch-pyenv-jupyter) ![LICENSE](https://img.shields.io/badge/license-CC%20BY--SA%204.0-green.svg)  
 <a href="https://star-history.com/#20241204/docker-arch-pyenv-jupyter&Date">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=20241204/docker-arch-pyenv-jupyter&type=Date&theme=dark" />
