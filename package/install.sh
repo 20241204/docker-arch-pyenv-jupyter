@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-
+set -e
+set -u
 # 配置 pyenv 安装 python
 config_pyenv() {
     # 将执行脚本移动到可执行目录并授权
