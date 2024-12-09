@@ -1,5 +1,5 @@
 # docker-arch-pyenv-jupyter
-在 arm64v8 和 amd64 的 alpine 上使用的 pyenv Jupyter docker构建材料。
+在 arm64v8 和 amd64 上使用的 pyenv Jupyter docker构建材料。
 
 [![GitHub Workflow dockerbuild Status](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/actions.yml/badge.svg)](https://github.com/20241204/docker-arch-pyenv-jupyter/actions/workflows/actions.yml)![Watchers](https://img.shields.io/github/watchers/20241204/docker-arch-pyenv-jupyter) ![Stars](https://img.shields.io/github/stars/20241204/docker-arch-pyenv-jupyter) ![Forks](https://img.shields.io/github/forks/20241204/docker-arch-pyenv-jupyter) ![Vistors](https://visitor-badge.laobi.icu/badge?page_id=20241204.docker-arch-pyenv-jupyter) ![LICENSE](https://img.shields.io/badge/license-CC%20BY--SA%204.0-green.svg)  
 <a href="https://star-history.com/#20241204/docker-arch-pyenv-jupyter&Date">
@@ -46,8 +46,7 @@
       ├── README.md                                          # 这个是 描述 文件  
       ├── docker-compose-amd64.yml                           # 这个是构建 pyenv+jupyter amd64 的 docker-compose.yml 配置文件  
       ├── docker-compose-arm64.yml                           # 这个是构建 pyenv+jupyter arm64 的 docker-compose.yml 配置文件  
-      └── package                                            # 这个是构建 pyenv+jupyter 的脚本文件材料所在目录   
-          ├── init.sh                                        # 这个是初始化 bash shell 环境脚本文件  
+      └── package                                            # 这个是构建 pyenv+jupyter 的脚本文件材料所在目录  
           ├── install.sh                                     # 这个是构建 pyenv+jupyter 镜像的时候在容器内执行流程的脚本   
           └── run_jupyter                                    # 这个是启动 jupyter 的脚本无密码环境，第一次执行初始密码123456    
 
