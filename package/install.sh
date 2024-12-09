@@ -313,7 +313,8 @@ eval "$(pyenv virtualenv-init -)"
     else
         echo "超出版本预期，脚本需要更新！！"
     fi
-    env
+    # 加载环境 pyenv
+    pyenv_env
     # 生成 jupyter 默认配置文件
     echo y | jupyter-notebook --generate-config --allow-root
 
