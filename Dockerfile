@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 ADD package /notebook/
 
