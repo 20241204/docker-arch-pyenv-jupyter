@@ -151,7 +151,7 @@ LC_CTYPE=zh_CN.UTF-8
     rm -frv /var/lib/apt/lists/*
 }
 
-# 安装 pyenv 和 jupyter
+# 安装 pyenv
 install_pyenv() {
     if [ -d "${HOME}/.pyenv" ]; then
         echo 'pyenv已经有安装记录'
