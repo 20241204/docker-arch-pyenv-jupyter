@@ -207,14 +207,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 20241204
-    env
     fi
-# 下载配置 jupyter
-install_config_jupyter
-# 下载配置 ijava
-config_jbang_ijava
-# 下载配置 openjdk
-download_config_jdk
 }
 
 # 下载配置 jupyter
@@ -409,5 +402,11 @@ export DEBIAN_FRONTEND=noninteractive
 #modify_sources
 init_install
 install_pyenv
+# 下载配置 jupyter
+install_config_jupyter
+# 下载配置 ijava
+config_jbang_ijava
+# 下载配置 openjdk
+download_config_jdk
 # 解除代理加速
 unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
