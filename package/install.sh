@@ -203,6 +203,21 @@ install_config_jupyter() {
         # 现代HTTP客户端，支持异步请求
         httpx
     )
+    
+    # 加载 pyenv 环境变量
+    export PYENV_ROOT="$HOME/.pyenv"
+    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+
+    # 写入 pyenv 环境
+    cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+20241204
+
     if [ ! -d "$HOME/.pyenv" ] ; then
         # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
         # 安装脚本 https://github.com/pyenv/pyenv-installer
@@ -210,12 +225,6 @@ install_config_jupyter() {
 
         # 更新 bash 环境
         cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-
-        # 加载 pyenv 环境变量
-        export PYENV_ROOT="$HOME/.pyenv"
-        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
 
         # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
         # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
@@ -245,21 +254,8 @@ install_config_jupyter() {
         pyenv version
         pyenv versions
 
-        # 写入 pyenv 环境
-        cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-20241204
-    else
-        echo 'pyenv已经安装'
-        # 加载 pyenv 环境变量
-        export PYENV_ROOT="$HOME/.pyenv"
-        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
     fi
+
     # 创建 python 软链接
     if [ -e $(command -v python3) ]
     then
@@ -383,10 +379,9 @@ download_config_jdk() {
     ln -fsv /opt/$(ls -al /opt | grep jdk | awk '{print $9}' | tail -1) $HOME/.jbang/currentjdk
 
     # 写入 java 环境变量
-    cat << 20241204 | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
-export CLASSPATH=.:\$JAVA_HOME/lib
-export PATH=\$PATH:\$JAVA_HOME/bin
-source activate cling
+    cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
+export CLASSPATH=.:$JAVA_HOME/lib
+export PATH=$PATH:$JAVA_HOME/bin
 20241204
     rm -fv /tmp/OpenJDK-jdk_hotspot.tar.gz
 }
