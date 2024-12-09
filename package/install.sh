@@ -164,14 +164,14 @@ install_pyenv() {
         # 安装脚本 https://github.com/pyenv/pyenv-installer
         curl https://pyenv.run | bash
 
+        # 更新 bash 环境
+        cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
+
         export PYENV_ROOT="$HOME/.pyenv"
         [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
         eval "$(pyenv virtualenv-init -)"
 
-        # 更新 bash 环境
-        cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-        
         # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
         # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
         # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
@@ -199,6 +199,7 @@ install_pyenv() {
         # python 虚拟环境检查
         pyenv version
         pyenv versions
+
         # 写入 pyenv 环境
         cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
 export PYENV_ROOT="$HOME/.pyenv"
@@ -206,6 +207,7 @@ export PYENV_ROOT="$HOME/.pyenv"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 20241204
+    env
     fi
 # 下载配置 jupyter
 install_config_jupyter
