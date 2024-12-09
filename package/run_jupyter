@@ -2,6 +2,11 @@
 set -e
 set -u
 
+# 暂时关闭 set -u 以避免 PS1 变量未定义错误
+set +u
+source $HOME/.bashrc
+set -u
+
 # 日志记录
 LOG_FILE="/notebook/jupyter_startup.log"
 exec > >(tee -i $LOG_FILE)
@@ -32,32 +37,9 @@ log() {
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
-# 加载中文支持
-LANGUAGE=zh_CN.UTF-8
-LC_ALL=zh_CN.UTF-8
-LANG=zh_CN.UTF-8
-LC_CTYPE=zh_CN.UTF-8
-# 加载 pyenv 支持
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-# 加载 JBang 支持
-alias j!=jbang
-export PATH="$HOME/.jbang/bin:$HOME/.jbang/currentjdk/bin:$PATH"
-export JAVA_HOME=$HOME/.jbang/currentjdk
-# 加载 java 支持
-export CLASSPATH=.:$JAVA_HOME/lib
-export PATH=$PATH:$JAVA_HOME/bin
 
-
-if [ ! -d "/notebook/" ] ; then
-    log "CRITICAL" "/notebook/ 未创建，请先创建 /notebook/。"
-    exit 1
-fi
-
-if ! command_exists jupyter; then
-    log "CRITICAL" "jupyter 未安装，请先安装 jupyter。"
+if [ ! -d "/notebook" ] ; then
+    log "CRITICAL" "/notebook 未创建，请先创建 /notebook。"
     exit 1
 fi
 
