@@ -153,66 +153,59 @@ LC_CTYPE=zh_CN.UTF-8
 
 # 安装 pyenv
 install_pyenv() {
-    if [ -d "${HOME}/.pyenv" ]; then
-        echo 'pyenv已经有安装记录'
-        export PYENV_ROOT="$HOME/.pyenv"
-        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-    else
-        # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
-        # 安装脚本 https://github.com/pyenv/pyenv-installer
-        curl https://pyenv.run | bash
+    # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
+    # 安装脚本 https://github.com/pyenv/pyenv-installer
+    curl https://pyenv.run | bash
 
-        # 更新 bash 环境
-        cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
+    # 更新 bash 环境
+    cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
 
-        export PYENV_ROOT="$HOME/.pyenv"
-        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
+    export PYENV_ROOT="$HOME/.pyenv"
+    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
 
-        # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-        # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
-        # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
-        pyenv install -v -f 3.12
-        
-        # 刷新
-        pyenv rehash
-        # 检查
-        pyenv version
-        pyenv versions
-        
-        # 移除已经存在的虚拟环境
-        # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
-        # pyenv deactivate $pyenv_var
-        # pyenv virtualenv-delete -f $pyenv_var
-        # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
-        
-        # 重新创建虚拟python环境
-        pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
-        pyenv global $pyenv_var
-        pyenv virtualenv $pyenv_var py$pyenv_var
-        pyenv global py$pyenv_var $pyenv_var
-        pyenv activate py$pyenv_var
-        
-        # python 虚拟环境检查
-        pyenv version
-        pyenv versions
+    # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+    # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
+    # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
+    pyenv install -v -f 3.12
+    
+    # 刷新
+    pyenv rehash
+    # 检查
+    pyenv version
+    pyenv versions
+    
+    # 移除已经存在的虚拟环境
+    # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
+    # pyenv deactivate $pyenv_var
+    # pyenv virtualenv-delete -f $pyenv_var
+    # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
+    
+    # 重新创建虚拟python环境
+    pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
+    pyenv global $pyenv_var
+    pyenv virtualenv $pyenv_var py$pyenv_var
+    pyenv global py$pyenv_var $pyenv_var
+    pyenv activate py$pyenv_var
+    
+    # python 虚拟环境检查
+    pyenv version
+    pyenv versions
 
-        # 写入 pyenv 环境
-        cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
+    # 写入 pyenv 环境
+    cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 20241204
-    fi
 }
 
 # 下载配置 jupyter
 install_config_jupyter() {
-
+    env 
+    command -v jupyter-notebook
     # pypi 加速源
     PYPI_CHANNELS=''
     #export PYPI_CHANNELS='-i https://pypi.tuna.tsinghua.edu.cn/simple' 
