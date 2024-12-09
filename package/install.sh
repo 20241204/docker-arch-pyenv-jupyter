@@ -150,66 +150,74 @@ LC_CTYPE=zh_CN.UTF-8
     apt autoclean
     rm -frv /var/lib/apt/lists/*
 }
-install_pyenv(){
-if [ -d "${HOME}/.pyenv" ]; then
-    echo 'pyenv已经有安装记录'
-else
-    # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
-    # 安装脚本 https://github.com/pyenv/pyenv-installer
-    curl https://pyenv.run | bash
 
-    export PYENV_ROOT="$HOME/.pyenv"
-    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+# 安装 pyenv 和 jupyter
+install_pyenv() {
+    if [ -d "${HOME}/.pyenv" ]; then
+        echo 'pyenv已经有安装记录'
+        export PYENV_ROOT="$HOME/.pyenv"
+        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+    else
+        # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
+        # 安装脚本 https://github.com/pyenv/pyenv-installer
+        curl https://pyenv.run | bash
 
-    # 更新 bash 环境
-    cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-    
-    # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-    # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
-    # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
-    pyenv install -v -f 3.12
-    
-    # 刷新
-    pyenv rehash
-    # 检查
-    pyenv version
-    pyenv versions
-    
-    # 移除已经存在的虚拟环境
-    # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
-    # pyenv deactivate $pyenv_var
-    # pyenv virtualenv-delete -f $pyenv_var
-    # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
-    
-    # 重新创建虚拟python环境
-    pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
-    pyenv global $pyenv_var
-    pyenv virtualenv $pyenv_var py$pyenv_var
-    pyenv global py$pyenv_var $pyenv_var
-    pyenv activate py$pyenv_var
-    
-    # python 虚拟环境检查
-    pyenv version
-    pyenv versions
-    # 写入 pyenv 环境
-    cat << '20241204' | tee -a $HOME/.bashrc
+        export PYENV_ROOT="$HOME/.pyenv"
+        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+
+        # 更新 bash 环境
+        cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
+        
+        # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+        # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
+        # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
+        pyenv install -v -f 3.12
+        
+        # 刷新
+        pyenv rehash
+        # 检查
+        pyenv version
+        pyenv versions
+        
+        # 移除已经存在的虚拟环境
+        # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
+        # pyenv deactivate $pyenv_var
+        # pyenv virtualenv-delete -f $pyenv_var
+        # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
+        
+        # 重新创建虚拟python环境
+        pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
+        pyenv global $pyenv_var
+        pyenv virtualenv $pyenv_var py$pyenv_var
+        pyenv global py$pyenv_var $pyenv_var
+        pyenv activate py$pyenv_var
+        
+        # python 虚拟环境检查
+        pyenv version
+        pyenv versions
+        # 写入 pyenv 环境
+        cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
-export PYENV_VIRTUALENV_DISABLE_PROMPT=1
 20241204
-fi
+    fi
+# 下载配置 jupyter
+install_config_jupyter
+# 下载配置 ijava
+config_jbang_ijava
+# 下载配置 openjdk
+download_config_jdk
 }
 
+# 下载配置 jupyter
 install_config_jupyter() {
-    # 暂时关闭 set -u 以避免 PS1 变量未定义错误
-    set +u
-    source $HOME/.bashrc
-    set -u
+
     # pypi 加速源
     PYPI_CHANNELS=''
     #export PYPI_CHANNELS='-i https://pypi.tuna.tsinghua.edu.cn/simple' 
@@ -258,7 +266,7 @@ install_config_jupyter() {
         # 现代HTTP客户端，支持异步请求
         httpx
     )
-
+    command -v python3
     # 创建 python 软链接
     if [ -e $(command -v python3) ]
     then
@@ -318,6 +326,7 @@ install_config_jupyter() {
     jupyter --version
 }
 
+# 下载配置 ijava
 config_jbang_ijava(){
     # 安装 JBang 
     curl -Ls https://sh.jbang.dev | bash -s - app setup 
@@ -327,11 +336,12 @@ config_jbang_ijava(){
     jbang trust add https://github.com/jupyter-java/jbang-catalog/ 
     jbang trust add https://github.com/jupyter-java/ 
     # 安装 Jupyter for Java Kernel 
-    jbang install-kernel@jupyter-java
+    jbang --verbose install-kernel@jupyter-java
     # 删除 JAVA 路径
     rm -frv $HOME/.jbang/currentjdk $HOME/.jbang/cache/jdks
 }
 
+# 下载配置 openjdk
 download_config_jdk() {
     # 获取操作系统类型
     OS=$(uname)
@@ -383,10 +393,10 @@ download_config_jdk() {
     ln -fsv /opt/$(ls -al /opt | grep jdk | awk '{print $9}' | tail -1) $HOME/.jbang/currentjdk
 
     # 写入 java 环境变量
-    cat << EOF | tee -a $HOME/.bashrc
-export CLASSPATH=.:\$JAVA_HOME/lib
-export PATH=\$PATH:\$JAVA_HOME/bin
-EOF
+    cat << '20241204' | tee -a $HOME/.bashrc
+export CLASSPATH=.:$JAVA_HOME/lib
+export PATH=$PATH:$JAVA_HOME/bin
+20241204
     rm -fv /tmp/OpenJDK-jdk_hotspot.tar.gz
 }
 
@@ -397,8 +407,5 @@ export DEBIAN_FRONTEND=noninteractive
 #modify_sources
 init_install
 install_pyenv
-install_config_jupyter
-config_jbang_ijava
-download_config_jdk
 # 解除代理加速
 unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
