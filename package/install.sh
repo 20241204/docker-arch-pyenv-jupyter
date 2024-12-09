@@ -118,6 +118,13 @@ init(){
     perl -pi -e 's/^en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/g' /etc/locale.gen
     perl -pi -e 's/^zh_CN GB2312/# zh_CN GB2312/g' /etc/locale.gen
     locale-gen zh_CN.UTF-8
+
+    # 加载简体中文字符集环境变量
+    LANGUAGE=zh_CN.UTF-8
+    LC_ALL=zh_CN.UTF-8
+    LANG=zh_CN.UTF-8
+    LC_CTYPE=zh_CN.UTF-8
+
     # 将简体中文字符集支持写入到环境变量
     cat << 20241204 | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
 LANGUAGE=zh_CN.UTF-8
@@ -147,11 +154,6 @@ LC_CTYPE=zh_CN.UTF-8
     apt clean
     apt autoclean
     rm -frv /var/lib/apt/lists/*
-
-    # 暂时关闭 set -u 以避免 PS1 变量未定义错误
-    set +u
-    source $HOME/.bashrc
-    set -u
 }
 
 install_config_jupyter() {
@@ -203,7 +205,7 @@ install_config_jupyter() {
         # 现代HTTP客户端，支持异步请求
         httpx
     )
-    
+
     # 加载 pyenv 环境变量
     export PYENV_ROOT="$HOME/.pyenv"
     [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
@@ -318,7 +320,7 @@ config_jbang_ijava(){
     # 安装 JBang 
     curl -Ls https://sh.jbang.dev | bash -s - app setup 
     # 临时添加 JBang 可执行文件在 PATH 中 
-    export PATH=$HOME/.jbang/bin:$PATH 
+    export PATH=$HOME/.jbang/bin:$PATH
     # 添加信任源 
     jbang trust add https://github.com/jupyter-java/jbang-catalog/ 
     jbang trust add https://github.com/jupyter-java/ 
