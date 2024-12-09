@@ -227,7 +227,7 @@ eval "$(pyenv virtualenv-init -)"
 
         # 更新 bash 环境
         cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-
+        exec bash -c 'source $HOME/.bashrc'
         # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
         # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
         # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
