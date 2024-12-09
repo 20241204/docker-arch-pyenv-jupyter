@@ -2,7 +2,7 @@ FROM alpine:latest
 
 ADD package /notebook/
 
-RUN cd /notebook/ ; sh init.sh ; rm -fv install.sh init.sh
+RUN cd /notebook/ ; bash install.sh ; rm -fv install.sh
 
 WORKDIR /notebook
 
