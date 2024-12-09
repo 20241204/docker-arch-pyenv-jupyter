@@ -46,8 +46,7 @@ deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ noble-proposed main restric
 
 }
 
-init_install(){
-
+init(){
     # 执行一些操作，例如更新软件包列表
     apt update
 
@@ -64,13 +63,6 @@ init_install(){
     #ln -fsv /usr/bin/bash /bin/sh
     #ln -fsv /usr/bin/bash /usr/bin/sh
 
-    # 将执行脚本移动到可执行目录并授权
-    if [ -e "$(command -v run_jupyter)" ]; then
-        echo '文件存在'
-    else
-        mv -fv run_jupyter /usr/bin/
-        chmod -v a+x /usr/bin/run_jupyter
-    fi
     # 改时区 安装基本命令
     date '+%Y-%m-%d %T'
     TZ=':Asia/Shanghai' date '+%Y-%m-%d %T'
@@ -92,9 +84,7 @@ init_install(){
     
     # 安装一些必备工具
     local packages=(
-        locales
         ca-certificates
-        gcc
         build-essential
         libssl-dev
         zlib1g-dev
@@ -102,7 +92,6 @@ init_install(){
         libreadline-dev
         libsqlite3-dev
         curl
-        wget
         git
         libncursesw5-dev
         xz-utils
@@ -111,10 +100,19 @@ init_install(){
         libxmlsec1-dev
         libffi-dev
         liblzma-dev
+        wget
+        locales
     )
     # 合并安装
-    eatmydata aptitude --without-recommends -o APT::Get::Fix-Missing=true -fy install "${packages[@]}"
-
+    # eatmydata aptitude --without-recommends -o APT::Get::Fix-Missing=true -fy install "${packages[@]}"
+    # 使用 for 循环逐个安装包
+    for package in "${packages[@]}"; do
+        echo "正在安装: $package"
+        eatmydata aptitude --without-recommends -o APT::Get::Fix-Missing=true -fy install "$package" || {
+            echo "安装 $package 时出错，停止安装。"
+            exit 1
+        }
+    done
     # 配置简体中文字符集支持
     perl -pi -e 's/^# zh_CN.UTF-8 UTF-8/zh_CN.UTF-8 UTF-8/g' /etc/locale.gen
     perl -pi -e 's/^en_GB.UTF-8 UTF-8/# en_GB.UTF-8 UTF-8/g' /etc/locale.gen
@@ -149,63 +147,14 @@ LC_CTYPE=zh_CN.UTF-8
     apt clean
     apt autoclean
     rm -frv /var/lib/apt/lists/*
+
+    # 暂时关闭 set -u 以避免 PS1 变量未定义错误
+    set +u
+    source $HOME/.bashrc
+    set -u
 }
 
-# 安装 pyenv
-install_pyenv() {
-    # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
-    # 安装脚本 https://github.com/pyenv/pyenv-installer
-    curl https://pyenv.run | bash
-
-    # 更新 bash 环境
-    cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-
-    export PYENV_ROOT="$HOME/.pyenv"
-    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-
-    # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-    # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
-    # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
-    pyenv install -v -f 3.12
-    
-    # 刷新
-    pyenv rehash
-    # 检查
-    pyenv version
-    pyenv versions
-    
-    # 移除已经存在的虚拟环境
-    # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
-    # pyenv deactivate $pyenv_var
-    # pyenv virtualenv-delete -f $pyenv_var
-    # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
-    
-    # 重新创建虚拟python环境
-    pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
-    pyenv global $pyenv_var
-    pyenv virtualenv $pyenv_var py$pyenv_var
-    pyenv global py$pyenv_var $pyenv_var
-    pyenv activate py$pyenv_var
-    
-    # python 虚拟环境检查
-    pyenv version
-    pyenv versions
-
-    # 写入 pyenv 环境
-    cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
-export PYENV_ROOT="$HOME/.pyenv"
-[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-eval "$(pyenv virtualenv-init -)"
-20241204
-}
-
-# 下载配置 jupyter
 install_config_jupyter() {
-    env 
-    command -v jupyter-notebook
     # pypi 加速源
     PYPI_CHANNELS=''
     #export PYPI_CHANNELS='-i https://pypi.tuna.tsinghua.edu.cn/simple' 
@@ -254,7 +203,63 @@ install_config_jupyter() {
         # 现代HTTP客户端，支持异步请求
         httpx
     )
-    command -v python3
+    if [ ! -d "$HOME/.pyenv" ] ; then
+        # 安装 pyenv 管理 python 环境 https://github.com/pyenv/pyenv 
+        # 安装脚本 https://github.com/pyenv/pyenv-installer
+        curl https://pyenv.run | bash
+
+        # 更新 bash 环境
+        cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
+
+        # 加载 pyenv 环境变量
+        export PYENV_ROOT="$HOME/.pyenv"
+        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+
+        # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+        # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
+        # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
+        pyenv install -v -f 3.12
+        
+        # 刷新
+        pyenv rehash
+        # 检查
+        pyenv version
+        pyenv versions
+        
+        # 移除已经存在的虚拟环境
+        # pyenv_var=`pyenv virtualenvs | grep '*' | awk '{print $2}'`
+        # pyenv deactivate $pyenv_var
+        # pyenv virtualenv-delete -f $pyenv_var
+        # sed -i '/'"${pyenv_var}"'/d' $HOME/.pyenv/version
+        
+        # 重新创建虚拟python环境
+        pyenv_var=`pyenv versions | sed 's;*;;g;s;/; ;g;s; ;;g' | grep -oE '^[0-9]*\.?[0-9]*\.?[0-9]*?$' | awk '{print $1}'`
+        pyenv global $pyenv_var
+        pyenv virtualenv $pyenv_var py$pyenv_var
+        pyenv global py$pyenv_var $pyenv_var
+        pyenv activate py$pyenv_var
+        
+        # python 虚拟环境检查
+        pyenv version
+        pyenv versions
+
+        # 写入 pyenv 环境
+        cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+20241204
+    else
+        echo 'pyenv已经安装'
+        # 加载 pyenv 环境变量
+        export PYENV_ROOT="$HOME/.pyenv"
+        [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+    fi
     # 创建 python 软链接
     if [ -e $(command -v python3) ]
     then
@@ -279,42 +284,40 @@ install_config_jupyter() {
         then
             echo "python 版本 ${ADDR[0]}.${ADDR[1]}"
             python -m pip --no-cache-dir install -v --upgrade pip --root-user-action=ignore ${PYPI_CHANNELS}
-            
-            python -m pip --no-cache-dir install -v "${jupyter_packages[@]}" --root-user-action=ignore ${PYPI_CHANNELS}
+            # python -m pip --no-cache-dir install -v "${jupyter_packages[@]}" --root-user-action=ignore ${PYPI_CHANNELS}
             # 使用 for 循环逐个安装包
-            # for package in "${jupyter_packages[@]}"; do
-            #     echo "正在安装: $package"
-            #     python -m pip --no-cache-dir install -v "$package" --root-user-action=ignore ${PYPI_CHANNELS} || {
-            #         echo "安装 $package 时出错，停止安装。"
-            #         exit 1
-            #     }
-            # done
+            for package in "${jupyter_packages[@]}"; do
+                echo "正在安装: $package"
+                python -m pip --no-cache-dir install -v "$package" --root-user-action=ignore ${PYPI_CHANNELS} || {
+                    echo "安装 $package 时出错，停止安装。"
+                    exit 1
+                }
+            done
         else
             echo "python 版本 ${ADDR[0]}.${ADDR[1]}"
             python -m pip --no-cache-dir install -v --upgrade pip --break-system-packages --root-user-action=ignore ${PYPI_CHANNELS}
-            
-            python -m pip --no-cache-dir install -v "${jupyter_packages[@]}" --break-system-packages --root-user-action=ignore ${PYPI_CHANNELS}
+            # python -m pip --no-cache-dir install -v "${jupyter_packages[@]}" --break-system-packages --root-user-action=ignore ${PYPI_CHANNELS}
             # 使用 for 循环逐个安装包
-            # for package in "${jupyter_packages[@]}"; do
-            #     echo "正在安装: $package"
-            #     python -m pip --no-cache-dir install -v "$package" --break-system-packages --root-user-action=ignore ${PYPI_CHANNELS} || {
-            #         echo "安装 $package 时出错，停止安装。"
-            #         exit 1
-            #     }
-            # done
+            for package in "${jupyter_packages[@]}"; do
+                echo "正在安装: $package"
+                python -m pip --no-cache-dir install -v "$package" --break-system-packages --root-user-action=ignore ${PYPI_CHANNELS} || {
+                    echo "安装 $package 时出错，停止安装。"
+                    exit 1
+                }
+            done
         fi
     else
         echo "超出版本预期，脚本需要更新！！"
     fi
-
+    env
     # 生成 jupyter 默认配置文件
     echo y | jupyter-notebook --generate-config --allow-root
 
     # 查看 jupyter 版本
     jupyter --version
+    rm -fv requirements.txt
 }
 
-# 下载配置 ijava
 config_jbang_ijava(){
     # 安装 JBang 
     curl -Ls https://sh.jbang.dev | bash -s - app setup 
@@ -324,12 +327,11 @@ config_jbang_ijava(){
     jbang trust add https://github.com/jupyter-java/jbang-catalog/ 
     jbang trust add https://github.com/jupyter-java/ 
     # 安装 Jupyter for Java Kernel 
-    jbang --verbose install-kernel@jupyter-java
+    jbang install-kernel@jupyter-java
     # 删除 JAVA 路径
     rm -frv $HOME/.jbang/currentjdk $HOME/.jbang/cache/jdks
 }
 
-# 下载配置 openjdk
 download_config_jdk() {
     # 获取操作系统类型
     OS=$(uname)
@@ -381,9 +383,10 @@ download_config_jdk() {
     ln -fsv /opt/$(ls -al /opt | grep jdk | awk '{print $9}' | tail -1) $HOME/.jbang/currentjdk
 
     # 写入 java 环境变量
-    cat << '20241204' | tee -a $HOME/.bashrc
-export CLASSPATH=.:$JAVA_HOME/lib
-export PATH=$PATH:$JAVA_HOME/bin
+    cat << 20241204 | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
+export CLASSPATH=.:\$JAVA_HOME/lib
+export PATH=\$PATH:\$JAVA_HOME/bin
+source activate cling
 20241204
     rm -fv /tmp/OpenJDK-jdk_hotspot.tar.gz
 }
@@ -393,13 +396,12 @@ export DEBIAN_FRONTEND=noninteractive
 #export IP=127.0.0.1 H_P=1234 S_P=12345 ; export http_proxy=http://${IP}:${H_P} https_proxy=http://${IP}:${H_P} all_proxy=socks5://${IP}:${S_P} HTTP_PROXY=http://${IP}:${H_P} HTTPS_PROXY=http://${IP}:${H_P} ALL_PROXY=socks5://${IP}:${S_P}
 # 修改 sources 加速源
 #modify_sources
-init_install
-install_pyenv
-# 下载配置 jupyter
+init
 install_config_jupyter
-# 下载配置 ijava
 config_jbang_ijava
-# 下载配置 openjdk
 download_config_jdk
 # 解除代理加速
 unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+# 将执行脚本移动到可执行目录并授权
+mv -fv run_jupyter /usr/bin/
+chmod -v a+x /usr/bin/run_jupyter
