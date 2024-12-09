@@ -156,6 +156,16 @@ LC_CTYPE=zh_CN.UTF-8
     rm -frv /var/lib/apt/lists/*
 }
 
+# 加载 pyenv 环境变量函数
+pyenv_env() {
+    # 加载 pyenv 环境变量
+    echo '加载 pyenv 环境变量'
+    export PYENV_ROOT="$HOME/.pyenv"
+    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+}
+
 install_config_jupyter() {
     # pypi 加速源
     PYPI_CHANNELS=''
@@ -206,12 +216,6 @@ install_config_jupyter() {
         httpx
     )
 
-    # 加载 pyenv 环境变量
-    export PYENV_ROOT="$HOME/.pyenv"
-    [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init -)"
-    eval "$(pyenv virtualenv-init -)"
-
     # 写入 pyenv 环境
     cat << '20241204' | tee -a /etc/default/locale /etc/environment $HOME/.bashrc $HOME/.profile
 export PYENV_ROOT="$HOME/.pyenv"
@@ -227,7 +231,9 @@ eval "$(pyenv virtualenv-init -)"
 
         # 更新 bash 环境
         cd $HOME/.pyenv/plugins/python-build/../.. && git pull && cd -
-        exec bash -c 'source $HOME/.bashrc'
+        # 加载环境 pyenv
+        pyenv_env
+
         # 安装最新版 python https://github.com/pyenv/pyenv/wiki#suggested-build-environment
         # 构建问题参考 https://github.com/pyenv/pyenv/wiki/Common-build-problems
         # pyenv install -v -f $(pyenv install --list | grep -Eo '^[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)$' | tail -1)
