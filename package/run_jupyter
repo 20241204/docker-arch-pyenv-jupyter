@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -e
+set -u
+
+# 加载中文环境
+LANGUAGE=zh_CN.UTF-8
+LC_ALL=zh_CN.UTF-8
+LANG=zh_CN.UTF-8
+LC_CTYPE=zh_CN.UTF-8
+
+# 直接设置 pyenv 环境变量
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
+# 加载 JBang 环境变量
+alias j!=jbang
+export PATH="$HOME/.jbang/bin:$HOME/.jbang/currentjdk/bin:$PATH"
+export JAVA_HOME=$HOME/.jbang/currentjdk
+
+# 加载 java 环境变量
+export JAVA_HOME=/opt/$(ls -al /opt | grep jdk | awk '{print $9}' | tail -1)
+export CLASSPATH=.:$JAVA_HOME/lib
+export PATH=$PATH:$JAVA_HOME/bin
+
+# 日志记录
+LOG_FILE="/notebook/jupyter_startup.log"
+exec > >(tee -i $LOG_FILE)
+exec 2>&1
+
+# 设置颜色变量
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+NC='\033[0m' # 无颜色
+
+log() {
+    local level="$1"
+    local message="$2"
+    case "$level" in
+        "INFO") echo -e "${GREEN}[INFO]${NC} $message" ;;
+        "WARN") echo -e "${YELLOW}[WARN]${NC} $message" ;;
+        "ERROR") echo -e "${RED}[ERROR]${NC} $message" ;;
+        "DEBUG") echo -e "${BLUE}[DEBUG]${NC} $message" ;;
+        "CRITICAL") echo -e "${MAGENTA}[CRITICAL]${NC} $message" ;;
+        *) echo -e "$message" ;;
+    esac
+}
+
+# 检查必要命令
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+if [ ! -d "/notebook" ] ; then
+    log "CRITICAL" "/notebook 未创建，请先创建 /notebook。"
+    exit 1
+fi
+
+if ! command_exists jupyter-lab; then
+    log "CRITICAL" "jupyter-lab 未安装，请先安装 jupyter-lab。"
+    exit 1
+fi
+
+# 判断用户是否自定义了配置文件？
+if [ ! -f $HOME/.jupyter/jupyter_server_config.json ]; then
+    log "INFO" "生成 Jupyter 配置文件"
+    jupyter-server --generate-config -y
+
+    if [[ -z "${PASSWORD:-}" ]]; then
+        log "WARN" "未设置 PASSWORD 变量，即将自动设置默认密码：123456"
+        export PASSWORD=123456
+        #log "WARN" "未设置 PASSWORD 变量，请输入用于 Jupyter 的密码："
+        #read -s PASSWORD
+        #export PASSWORD
+    fi
+
+    log "INFO" "生成密码哈希"
+    PASSWORD_HASH=argon2:$(python -c "from argon2 import PasswordHasher; print(PasswordHasher().hash('${PASSWORD}'))")
+
+    log "INFO" "写入 Jupyter 配置文件"
+    cat <<EOF | tee $HOME/.jupyter/jupyter_server_config.json
+{
+  "IdentityProvider": {
+    "hashed_password": "$PASSWORD_HASH"
+  }
+}
+EOF
+fi
+
+log "INFO" "启动 JupyterLab"
+jupyter-lab --allow-root --no-browser --notebook-dir=/notebook --ip=0.0.0.0 --port=8888
